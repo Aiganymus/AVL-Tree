@@ -1,9 +1,9 @@
-class Node {
-    int key, height;
+class Node { //вершина дерева
+    int value, height;
     Node left, right;
  
-    Node(int d) {
-        key = d;
+    Node(int value) {
+        this.value = value;
         height = 1;
     }
 }

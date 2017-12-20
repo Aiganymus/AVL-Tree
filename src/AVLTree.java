@@ -1,140 +1,146 @@
 class AVLTree {
     Node root;
  
-    int height(Node N) {
-        if (N == null)
-             return 0;
+    int height(Node N) { //возвращает высоту дерева
+        if (N == null) return 0;
          return N.height;
     }
+    
+    int getBalance(Node N) { //возвращает баланс вершины N (разницу между высотой левого и правого поддерева) 
+        if (N == null) return 0;
+        return height(N.left) - height(N.right);
+    }
+    
+    void print(Node node) { //делает прямой обход и выводит каждую вершину
+        if (node != null) {
+            System.out.print(node.value + " ");
+            print(node.left);
+            print(node.right);
+        }
+    }
+    
+    Node minNode(Node node) { //возвращает вершину с наименьшим значением у дерева\поддерева
+        Node cur = node;
+        while (cur.left != null) //спускается влево вниз, пока не дойдет до вершины с наименьшим значением
+           cur = cur.left;
+        return cur;
+    }
  
-    Node rightRotate(Node y) {
+    Node rightRotate(Node y) { //поворот вправо поддерева у 
         Node x = y.left;
-        Node T2 = x.right;
+        Node x2 = x.right;
+        
+        //поворот вправо поддерева у 
         x.right = y;
-        y.left = T2; 
+        y.left = x2; 
+        
+        //меняем высоту 
         y.height = Math.max(height(y.left), height(y.right)) + 1;
         x.height = Math.max(height(x.left), height(x.right)) + 1;
-        return x;
+        return x; //возвращает новую вершину
     }
  
     Node leftRotate(Node x) {
         Node y = x.right;
-        Node T2 = y.left;
+        Node y2 = y.left;
+        
+        //поворот влево поддерева х
         y.left = x;
-        x.right = T2;
+        x.right = y2;
+        
+        //меняем высоту 
         x.height = Math.max(height(x.left), height(x.right)) + 1;
         y.height = Math.max(height(y.left), height(y.right)) + 1;
-        return y;
+        return y; //возвращает новую вершину
     }
  
-    int getBalance(Node N) {
-        if (N == null) return 0;
-        return height(N.left) - height(N.right);
-    }
+    //добавление вершины
+    Node insert(Node node, int value) {
+        if (node == null) return (new Node(value));
  
-    Node insert(Node node, int key) {
-        if (node == null) return (new Node(key));
+        if (value < node.value)
+            node.left = insert(node.left, value); //спускается влево, если добавляемая вершина меньше текущей
+        else 
+            node.right = insert(node.right, value); //спускается вправо, если добавляемая вершина больше текущей
  
-        if (key < node.key)
-            node.left = insert(node.left, key);
-        else if (key > node.key)
-            node.right = insert(node.right, key);
-        else return node;
- 
-        node.height = 1 + Math.max(height(node.left),
-                              height(node.right));
+        node.height = 1 + Math.max(height(node.left), height(node.right)); //меняем высоту предка вершины, которую добавили
  
         int balance = getBalance(node);
  
-        if (balance > 1 && key < node.left.key)
-            return rightRotate(node);
- 
-        if (balance < -1 && key > node.right.key)
-            return leftRotate(node);
- 
-        if (balance > 1 && key > node.left.key) {
-            node.left = leftRotate(node.left);
-            return rightRotate(node);
-        }
- 
-        if (balance < -1 && key < node.right.key) {
-            node.right = rightRotate(node.right);
-            return leftRotate(node);
-        }
+        if (balance > 1) {
+        	if(getBalance(root.left) >= 0) return rightRotate(root); //если дерево стало несбалансированным, делаем поворот вправо
+        	else { //поворот влево, затем вправо
+        		root.left = leftRotate(root.left);
+                return rightRotate(root);
+        	}
+        }           
+        
+        else if (balance < -1) {
+        	if(getBalance(root.right) <= 0) return leftRotate(root); //поворот влево
+        	else { //поворот вправо, затем влево
+        		root.right = rightRotate(root.right);
+                return leftRotate(root);
+        	}
+        } 
  
         return node;
     }
  
-    Node minNode(Node node) {
-        Node current = node;
-        while (current.left != null)
-           current = current.left;
-        return current;
-    }
- 
-    Node delete(Node root, int key) {
-        if (root == null)
-            return root;
+    Node delete(Node root, int value) {
+        if (root == null) return root; //простое удаление вершины
         
-        if (key < root.key)
-            root.left = delete(root.left, key);
+        if (value < root.value) //спускается влево, если вершина, которую нужно удалить, меньше чем корень
+            root.left = delete(root.left, value);
  
-        else if (key > root.key)
-            root.right = delete(root.right, key);
+        else if (value > root.value) //спускается вправо, если вершина, которую нужно удалить, больше чем корень
+            root.right = delete(root.right, value);
 
-        else {
+        else { //если вершина найдена 
             if ((root.left == null) || (root.right == null)) {
-                Node temp = null;
-                if (temp == root.left)
-                    temp = root.right;
+                Node tmp = null;
+                if (tmp == root.left)
+                    tmp = root.right;
                 else
-                    temp = root.left;
+                    tmp = root.left;
  
-                if (temp == null) {
-                    temp = root;
+                if (tmp == null) { //если у вершины нет потомков, то ее просто удаляют
+                    tmp = root;
                     root = null;
                 }
-                else  
-                    root = temp; 
+                else  //если у вершины есть потомок
+                    root = tmp; 
             }
-            else {
-                Node temp = minNode(root.right);
-                root.key = temp.key;
-                root.right = delete(root.right, temp.key);
+            else { //если у вершины два потомка
+                Node tmp = minNode(root.right); //находим наименьшую вершину в правом поддереве
+                //копирумем потомка и удаляем
+                root.value = tmp.value; 
+                root.right = delete(root.right, tmp.value);
             }
         }
  
-        if (root == null)
-            return root;
+        if (root == null) return root; //если у дерева была только одна вершина, то просто ее возвращаем
  
         root.height = Math.max(height(root.left), height(root.right)) + 1;
  
         int balance = getBalance(root);
  
-        if (balance > 1 && getBalance(root.left) >= 0)
-            return rightRotate(root);
- 
-        if (balance > 1 && getBalance(root.left) < 0) {
-            root.left = leftRotate(root.left);
-            return rightRotate(root);
-        }
- 
-        if (balance < -1 && getBalance(root.right) <= 0)
-            return leftRotate(root);
- 
-        if (balance < -1 && getBalance(root.right) > 0) {
-            root.right = rightRotate(root.right);
-            return leftRotate(root);
-        }
+        if (balance > 1) {
+        	if(getBalance(root.left) >= 0) return rightRotate(root); //если дерево стало несбалансированным, делаем поворот вправо
+        	else { //поворот влево, затем вправо
+        		root.left = leftRotate(root.left);
+                return rightRotate(root);
+        	}
+        }           
+        
+        else if (balance < -1) {
+        	if(getBalance(root.right) <= 0) return leftRotate(root); //поворот влево
+        	else { //поворот вправо, затем влево
+        		root.right = rightRotate(root.right);
+                return leftRotate(root);
+        	}
+        } 
  
         return root;
     }
- 
-    void print(Node node) {
-        if (node != null) {
-            System.out.print(node.key + " ");
-            print(node.left);
-            print(node.right);
-        }
-    }
+
 }
